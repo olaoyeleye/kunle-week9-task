@@ -26,8 +26,20 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-      
+          aws-region: "${{ secrets.REGION }}" 
+      - name: Create terraform.tfvars from secrets
+        run: |
+            cat > terraform.tfvars <<EOF
+            ami               = "${{ secrets.AMI }}"
+            instance_type     = "${{ secrets.INSTANCE_TYPE }}"
+            vpc_name          = "${{ secrets.VPC_NAME }}"
+            vpc_cidr          = "${{ secrets.VPC_CIDR }}"
+            public_subnet_cidr = "${{ secrets.PUBLIC_SUBNET_CIDR }}"
+            private_subnet_cidr = "${{ secrets.PRIVATE_SUBNET_CIDR }}"
+            availability_zone = "${{ secrets.AVAILABILITY_ZONE }}"
+            instance-name-ansible = "${{ secrets.INSTANCE_NAME_ANSIBLE }}"
+        EOF
+
       - name: Prep Terraform Binaries
         uses: hashicorp/setup-terraform@v3
         with:
