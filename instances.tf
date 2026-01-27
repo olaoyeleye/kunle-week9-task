@@ -36,6 +36,17 @@ resource "null_resource" "install_ansible" {
     private_key = file("${var.vpc_name}-deployer-key.pem")
     host        = aws_instance.ansible.public_ip
   }
+provisioner "file" {
+  source      = "${var.vpc_name}-deployer-key.pem"
+  destination = "/home/ec2-user/${var.vpc_name}-deployer-key.pem"
+  
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = file("${var.vpc_name}-deployer-key.pem")
+    host        = aws_instance.ansible.public_ip
+  }
+}
 
   provisioner "remote-exec" {
     inline = [ 
@@ -46,16 +57,19 @@ resource "null_resource" "install_ansible" {
       "ansible --version",
       "echo 'Creating directory structure...'",
       "mkdir -p ~/ansible/{playbooks,inventory,roles}" 
+    
     ]
   }
 }
+
+ 
 
 resource "aws_instance" "java" {
   ami                         = var.ami
   instance_type               = var.instance_type
   key_name                    = "${var.vpc_name}-deployer-key"
   associate_public_ip_address = true
-  # security_groups = 
+ 
   subnet_id              = aws_subnet.public-kunle-subnet.id
   vpc_security_group_ids = [aws_security_group.public-kunle-sg.id]
 
