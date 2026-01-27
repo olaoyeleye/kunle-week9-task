@@ -34,18 +34,18 @@ jobs:
           terraform_version: 1.6.6
       
       - name: Terraform Init
-        working-directory: terraform
+        #working-directory: . #terraform
         run: terraform init
 
       - name: Terraform Validate
-        working-directory: terraform
+        #working-directory: . #terraform
         run: terraform validate
 
       - name: Terraform plan 
-        working-directory: terraform
+       #working-directory: terraform
         run: terraform plan
 
       - name: Terraform apply 
-        working-directory: terraform
+        ##working-directory: terraform
         run: terraform apply
       
