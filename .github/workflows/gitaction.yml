@@ -30,15 +30,18 @@ jobs:
       - name: Create terraform.tfvars from secrets
         run: |
             cat > terraform.tfvars <<EOF
+            region      =       "${{ secrets.REGION }}" 
             ami               = "${{ secrets.AMI }}"
             instance_type     = "${{ secrets.INSTANCE_TYPE }}"
             vpc_name          = "${{ secrets.VPC_NAME }}"
             vpc_cidr          = "${{ secrets.VPC_CIDR }}"
-            public_subnet_cidr = "${{ secrets.PUBLIC_SUBNET_CIDR }}"
-            private_subnet_cidr = "${{ secrets.PRIVATE_SUBNET_CIDR }}"
-            availability_zone = "${{ secrets.AVAILABILITY_ZONE }}"
             instance-name-ansible = "${{ secrets.INSTANCE_NAME_ANSIBLE }}"
+            instance-name-nginx = "${{ secrets.INSTANCE_NAME_NGINX }}"
+            instance-name-java = "${{ secrets.INSTANCE_NAME_JAVA }}"
             EOF
+       
+      - name: Display terraform.tfvars
+        run: cat terraform.tfvars
 
       - name: Prep Terraform Binaries
         uses: hashicorp/setup-terraform@v3
