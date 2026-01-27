@@ -33,6 +33,7 @@ jobs:
             region      =       "${{ secrets.REGION }}" 
             ami               = "${{ secrets.AMI }}"
             instance_type     = "${{ secrets.INSTANCE_TYPE }}"
+            key_name                = "kunle-vpc-deployer-key"
             vpc_name          = "${{ secrets.VPC_NAME }}" 
             instance-name-ansible = "${{ secrets.INSTANCE_NAME_ANSIBLE }}"
             instance-name-nginx = "${{ secrets.INSTANCE_NAME_NGINX }}"
