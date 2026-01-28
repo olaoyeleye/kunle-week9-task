@@ -27,40 +27,40 @@ resource "aws_instance" "nginx" {
 #}
 
 # Install Ansible using remote-exec provisioner
-resource "null_resource" "install_ansible" {
-  depends_on = [aws_instance.ansible]
+#resource "null_resource" "install_ansible" {
+#  depends_on = [aws_instance.ansible]
 
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"  # Change to "ubuntu" if using Ubuntu AMI
-    private_key = file("${var.vpc_name}-deployer-key.pem")
-    host        = aws_instance.ansible.public_ip
-  }
-provisioner "file" {
-  source      = "${var.vpc_name}-deployer-key.pem"
-  destination = "/home/ec2-user/${var.vpc_name}-deployer-key.pem"
-  
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = file("${var.vpc_name}-deployer-key.pem")
-    host        = aws_instance.ansible.public_ip
-  }
-}
+#  connection {
+#    type        = "ssh"
+#    user        = "ec2-user"  # Change to "ubuntu" if using Ubuntu AMI
+#    private_key = file("${var.vpc_name}-deployer-key.pem")
+#    host        = aws_instance.ansible.public_ip
+#  }
+#provisioner "file" {
+#  source      = "${var.vpc_name}-deployer-key.pem"
+#  destination = "/home/ec2-user/${var.vpc_name}-deployer-key.pem"
+#  
+#  connection {
+#    type        = "ssh"
+#    user        = "ec2-user"
+#    private_key = file("${var.vpc_name}-deployer-key.pem")
+#    host        = aws_instance.ansible.public_ip
+#  }
+#}
 
-  provisioner "remote-exec" {
-    inline = [ 
-      "cloud-init status --wait",
-      "echo 'Installing Ansible...'",
-      "sudo yum update -y",
-      "sudo amazon-linux-extras install ansible2 -y || sudo yum install -y ansible || sudo dnf install -y ansible-core",
-      "ansible --version",
-      "echo 'Creating directory structure...'",
-      "mkdir -p ~/ansible/{playbooks,inventory,roles}" ,
-      "chmod 400 ${var.vpc_name}-deployer-key.pem"
-    ]
-  }
-}
+#  provisioner "remote-exec" {
+#    inline = [ 
+#      "cloud-init status --wait",
+#      "echo 'Installing Ansible...'",
+#      "sudo yum update -y",
+#      "sudo amazon-linux-extras install ansible2 -y || sudo yum install -y ansible || sudo dnf install -y ansible-core",
+#      "ansible --version",
+#      "echo 'Creating directory structure...'",
+#      "mkdir -p ~/ansible/{playbooks,inventory,roles}" ,
+#      "chmod 400 ${var.vpc_name}-deployer-key.pem"
+#    ]
+#  }
+#}
 
  
 
