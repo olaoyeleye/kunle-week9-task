@@ -61,7 +61,8 @@ jobs:
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-      run: terraform apply -auto-approve tfplan
+      #run: terraform apply -auto-approve tfplan
+      run: terraform destroy -auto-approve tfplan
 
     - name: Get Terraform Outputs
       id: outputs
@@ -86,7 +87,7 @@ jobs:
 
     - name: Wait for Instances to Initialize
       if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-      run: sleep 90
+      run: sleep 40
 
   ansible:
     name: 'Configure Servers with Ansible'
