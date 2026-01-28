@@ -13,3 +13,4 @@ resource "local_file" "ssh_key" {
   content         = tls_private_key.deployer.private_key_pem
   file_permission = "0400"
 }
+

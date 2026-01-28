@@ -57,7 +57,7 @@ provisioner "file" {
       "ansible --version",
       "echo 'Creating directory structure...'",
       "mkdir -p ~/ansible/{playbooks,inventory,roles}" 
-    
+      "chmod 400 ${var.vpc_name}-deployer-key.pem"
     ]
   }
 }
