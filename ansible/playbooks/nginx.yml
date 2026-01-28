@@ -1,0 +1,38 @@
+---
+- name: Install and Configure Nginx
+  hosts: nginx
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+        timeout: 300
+
+    - name: Update yum cache
+      yum:
+        update_cache: yes
+
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Start and enable Nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Ensure Nginx is running
+      systemd:
+        name: nginx
+        state: restarted
+
+  #  - name: Open firewall for HTTP
+  #    firewalld:
+  #      service: http
+  #      permanent: yes
+  #      state: enabled
+  #      immediate: yes
+  #    ignore_errors: yes

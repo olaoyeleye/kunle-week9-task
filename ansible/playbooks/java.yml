@@ -1,0 +1,63 @@
+---
+- name: Install and Configure Java
+  hosts: java
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+        timeout: 300
+
+    - name: Update yum cache
+      yum:
+        update_cache: yes
+
+    - name: Install Java 11
+      yum:
+        name: java-11-amazon-corretto
+        state: present
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Display Java version
+      debug:
+        msg: "{{ java_version.stderr_lines }}"
+
+  #  - name: Create Java application directory
+  #    file:
+  #      path: /opt/javaapp
+  #      state: directory
+  #      mode: '0755'
+
+   # - name: Create sample Java application
+   #   copy:
+   #     content: |
+   #       public class HelloWorld {
+   #           public static void main(String[] args) {
+   #               System.out.println("Hello from Kunle's Java Server!");
+   #               System.out.println("Deployed via GitHub Actions & Ansible");
+   #           }
+   #       }
+   #     dest: /opt/javaapp/HelloWorld.java
+   #     mode: '0644'
+
+   # - name: Compile Java application
+   #   command: javac /opt/javaapp/HelloWorld.java
+   #   args:
+   #     chdir: /opt/javaapp
+   #     creates: /opt/javaapp/HelloWorld.class
+
+   # - name: Run Java application (test)
+   #   command: java HelloWorld
+   #   args:
+   #     chdir: /opt/javaapp
+   #   register: java_output
+   #   changed_when: false
+
+    #- name: Display Java application output
+    #  debug:
+    #    msg: "{{ java_output.stdout_lines }}"
