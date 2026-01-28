@@ -56,7 +56,7 @@ provisioner "file" {
       "sudo amazon-linux-extras install ansible2 -y || sudo yum install -y ansible || sudo dnf install -y ansible-core",
       "ansible --version",
       "echo 'Creating directory structure...'",
-      "mkdir -p ~/ansible/{playbooks,inventory,roles}" 
+      "mkdir -p ~/ansible/{playbooks,inventory,roles}" ,
       "chmod 400 ${var.vpc_name}-deployer-key.pem"
     ]
   }
