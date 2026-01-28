@@ -13,18 +13,18 @@ resource "aws_instance" "nginx" {
 }
 
 
-resource "aws_instance" "ansible" {
-  ami                         = var.ami
-  instance_type               = var.instance_type
-  key_name                    = "${var.vpc_name}-deployer-key"
-  associate_public_ip_address = true
-  # security_groups = 
-  subnet_id              = aws_subnet.public-kunle-subnet.id
-  vpc_security_group_ids = [aws_security_group.public-kunle-sg.id]
-  tags ={
-    Name = var.instance-name-ansible
-  }
-}
+#resource "aws_instance" "ansible" {
+#  ami                         = var.ami
+#  instance_type               = var.instance_type
+#  key_name                    = "${var.vpc_name}-deployer-key"
+#  associate_public_ip_address = true
+#  # security_groups = 
+#  subnet_id              = aws_subnet.public-kunle-subnet.id
+#  vpc_security_group_ids = [aws_security_group.public-kunle-sg.id]
+#  tags ={
+#    Name = var.instance-name-ansible
+#  }
+#}
 
 # Install Ansible using remote-exec provisioner
 resource "null_resource" "install_ansible" {
