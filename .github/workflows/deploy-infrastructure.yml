@@ -1,14 +1,6 @@
 name: Deploy Infrastructure and Applications
 
 on:
-  push:
-    branches: 
-      - main
-      - dev
-  pull_request:
-    branches: 
-      - main
-      - dev
   workflow_dispatch:
     inputs:
       tf_action:
@@ -20,6 +12,14 @@ on:
           - destroy
 #        default: plan
 
+  push:
+    branches: 
+      - main
+      - dev
+  pull_request:
+    branches: 
+      - main
+      - dev
 env:
   TF_VERSION: 1.6.0
 
