@@ -1,0 +1,165 @@
+name: Deploy Infrastructure and Applications
+
+on:
+  workflow_dispatch:
+    inputs:
+      tf_action:
+        description: "Terraform action"
+        required: true
+        type: choice
+        options: 
+          - apply
+          - destroy
+#        default: plan
+
+  push:
+    branches: 
+      - main
+      - dev
+  pull_request:
+    branches: 
+      - main
+      - dev
+env:
+  TF_VERSION: 1.6.0
+
+jobs:
+  terraform:
+    name: 'Provision Infrastructure'
+    runs-on: ubuntu-latest
+    outputs:
+      nginx_ip: ${{ steps.outputs.outputs.nginx_ip }}
+      java_ip: ${{ steps.outputs.outputs.java_ip }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        terraform_wrapper: false
+
+    - name: Create terraform.tfvars
+      run: |
+        cat > terraform.tfvars <<EOF
+        region                  = "${{ secrets.REGION }}"
+        ami                     = "${{ secrets.AMI }}"
+        instance_type           = "${{ secrets.INSTANCE_TYPE }}"
+        instance-name-nginx     = "${{ secrets.INSTANCE_NAME_NGINX }}"
+        instance-name-java      = "${{ secrets.INSTANCE_NAME_JAVA }}"
+        vpc_name                = "${{ secrets.VPC_NAME }}"
+        EOF
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+
+    - name: Terraform Apply
+      if: github.event.inputs.tf_action == 'apply' && github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      run: terraform apply -auto-approve tfplan 
+    
+    - name: Terraform Destroy
+      if: github.event.inputs.tf_action == 'destroy' && github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      run: terraform destroy -auto-approve
+
+    - name: Get Terraform Outputs
+      id: outputs
+      if: github.event.inputs.tf_action == 'apply' &&  github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      run: |
+        echo "nginx_ip=$(terraform output -raw nginx_public_ip)" >> $GITHUB_OUTPUT
+        echo "java_ip=$(terraform output -raw java_public_ip)" >> $GITHUB_OUTPUT
+
+    - name: Export SSH Private Key
+      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      run: |
+        terraform output -raw private_key_pem > private_key.pem
+        chmod 600 private_key.pem
+
+    - name: Upload SSH Key as Artifact
+      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ssh-key
+        path: private_key.pem
+        retention-days: 1
+
+    - name: Wait for Instances to Initialize
+      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      run: sleep 40
+
+  ansible:
+    name: 'Configure Servers with Ansible'
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
+
+    - name: Download SSH Key
+      uses: actions/download-artifact@v4
+      with:
+        name: ssh-key
+
+    - name: Setup SSH Key
+      run: |
+        mkdir -p ~/.ssh
+        mv private_key.pem ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: Add SSH Known Hosts
+      run: |
+        ssh-keyscan -H ${{ needs.terraform.outputs.nginx_ip }} >> ~/.ssh/known_hosts 2>/dev/null || true
+        ssh-keyscan -H ${{ needs.terraform.outputs.java_ip }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+    - name: Create Ansible Inventory
+      run: |
+        mkdir -p ansible
+        cat > ansible/inventory.ini <<EOF
+        [nginx]
+        nginx-server ansible_host=${{ needs.terraform.outputs.nginx_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+        [java]
+        java-server ansible_host=${{ needs.terraform.outputs.java_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+        [all:vars]
+        ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+        EOF
+
+    - name: Test Ansible Connectivity
+      run: |
+        ansible all -i ansible/inventory.ini -m ping -v
+
+    - name: Deploy Nginx
+      run: |
+        ansible-playbook -i ansible/inventory.ini ansible/playbooks/nginx.yml -v
+
+    - name: Deploy Java Application
+      run: |
+        ansible-playbook -i ansible/inventory.ini ansible/playbooks/java.yml -v
+
+    - name: Display Deployment Info
+      run: |
+        echo "Deployment Complete!"
+        echo "Nginx Server: http://${{ needs.terraform.outputs.nginx_ip }}"
+        echo "Java Server: http://${{ needs.terraform.outputs.java_ip }}"
