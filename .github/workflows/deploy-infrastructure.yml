@@ -69,16 +69,16 @@ jobs:
       run: terraform plan -out=tfplan
 
     - name: Terraform Apply
-      if: github.event.inputs.tf_action == 'apply' && github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' #&& github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: terraform apply -auto-approve tfplan 
     
     - name: Terraform Destroy
-      if: github.event.inputs.tf_action == 'destroy' && github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'destroy' #&& github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: terraform destroy -auto-approve
 
     - name: Get Terraform Outputs
       id: outputs
-      if: github.event.inputs.tf_action == 'apply' &&  github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' #&&  github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: |
         echo "nginx_ip=$(terraform output -raw nginx_public_ip)" >> $GITHUB_OUTPUT
         echo "java_ip=$(terraform output -raw java_public_ip)" >> $GITHUB_OUTPUT
