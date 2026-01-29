@@ -78,7 +78,7 @@ jobs:
 
     - name: Get Terraform Outputs
       id: outputs
-      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' &&  github.ref == 'refs/heads/dev' && github.event_name == 'push'
       run: |
         echo "nginx_ip=$(terraform output -raw nginx_public_ip)" >> $GITHUB_OUTPUT
         echo "java_ip=$(terraform output -raw java_public_ip)" >> $GITHUB_OUTPUT
