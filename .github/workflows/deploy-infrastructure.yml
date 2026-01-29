@@ -90,7 +90,7 @@ jobs:
         chmod 600 private_key.pem
 
     - name: Upload SSH Key as Artifact
-      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       uses: actions/upload-artifact@v4
       with:
         name: ssh-key
@@ -98,14 +98,14 @@ jobs:
         retention-days: 1
 
     - name: Wait for Instances to Initialize
-      if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: sleep 40
 
   ansible:
     name: 'Configure Servers with Ansible'
     needs: terraform
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
     
     steps:
     - name: Checkout
