@@ -84,13 +84,13 @@ jobs:
         echo "java_ip=$(terraform output -raw java_public_ip)" >> $GITHUB_OUTPUT
 
     - name: Export SSH Private Key
-      if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' #if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: |
         terraform output -raw private_key_pem > private_key.pem
         chmod 600 private_key.pem
 
     - name: Upload SSH Key as Artifact
-      if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' #if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       uses: actions/upload-artifact@v4
       with:
         name: ssh-key
@@ -98,14 +98,14 @@ jobs:
         retention-days: 1
 
     - name: Wait for Instances to Initialize
-      if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+      if: github.event.inputs.tf_action == 'apply' #if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
       run: sleep 40
 
   ansible:
     name: 'Configure Servers with Ansible'
     needs: terraform
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
+    if: github.event.inputs.tf_action == 'apply' #if: github.ref == 'refs/heads/dev' #&& github.event_name == 'push'
     
     steps:
     - name: Checkout
